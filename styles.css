@@ -293,6 +293,7 @@ footer{
         left: 100%;
     }
    .grid{
+    margin-top:1em;
     order: 2;
     width: 100%;
     display: flex;
@@ -301,6 +302,10 @@ footer{
     border-radius: 0;
     order: 2;
    }
+    .grid-hollow-circle{
+        height: 2.5em;
+        width:2.5em;
+    }
    footer{
     display: none;
    }
