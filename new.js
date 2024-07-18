@@ -289,7 +289,7 @@ $('.pop-up-container').click(function () {
 })
 
 $('.p-v-p').click(function () {
-    isCpuPlaying = 0
+    CpuPlaying = 0
     resetPlayerBox();
     $('.menu-item').removeClass('pop-up-animation')
     restartGame();
