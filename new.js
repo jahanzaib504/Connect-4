@@ -7,7 +7,26 @@ timer = 20;
 player1_score = 0
 player2_score = 0
 filled = 0
-isHalt = 0 //Will be used for 
+
+/*
+function createCiclesInDOM();  Intialize and show circles 
+function selectedColumn(column_number); Triggers when user clicks on a column
+function showScoreInDOM(); shows the current scores of both players 
+function changeTurn(); Changes turn
+function foundLine(row_number, column_number); Checks if 4 circles are in straight line
+function BotTurn();   Use for bot 
+function full();     Checks if the whole grid is filled
+function alertPopup(text); For showing  different messages in DOM
+function addCircleToGrid(row_number, column_number);  Adds a circles to the selected cell
+function changeTimeBoxColorInDom();
+function showTimeInDom();
+function clearCircles();
+function resetTime();
+function restartGame();
+function resetPlayerBox();
+function startTimer();
+*/
+
 
 function createCiclesInDOM() {
     let DOMGrid = $('.grid');
@@ -33,7 +52,6 @@ function createCiclesInDOM() {
         arr[i] = new Array(7).fill(0);
 }
 function selectedColumn(column_number) {
-    isHalt = 1
     //first check if column has one empty place
     if (column_number < 0 || column_number > 7) return
     let row_number = 0
@@ -74,7 +92,6 @@ function selectedColumn(column_number) {
     changeTimeBoxColorInDom()
     resetTime()
     showTimeInDom()
-    isHalt = 0
 }
 
 
@@ -183,7 +200,7 @@ function foundLine(row_number, column_number) {
 function BotTurn() {
     if (CpuPlaying !== whichPlayerTurn)
         return;
-    setTimeout(()=>{}, 3000)
+    setTimeout(() => { }, 3000)
     let column_number = 0;
     let empty_column = []
     for (let i = 0; i < 7; i++) {
@@ -194,13 +211,7 @@ function BotTurn() {
     selectedColumn(column_number)
 }
 function full() {
-    for (let i = 0; i < 6; i++) {
-        for (let j = 0; j < 7; j++) {
-            if (this.arr[i][j] === 0)
-                return 0;
-        }
-    }
-    return 1;
+    return filled === 42;
 }
 function alertPopup(text) {
     let showText = $(".show-text h1");
@@ -220,6 +231,7 @@ function addCircleToGrid(row_number, column_number) {
     hollowCircle.append($inside_circle);
 
     $inside_circle.addClass('animation-circle');
+    filled++;
 }
 function changeTimeBoxColorInDom() {
     let timeBox = $(".timer-box");
@@ -232,8 +244,12 @@ function changeTimeBoxColorInDom() {
 
 function showTimeInDom() {
     $('.turn').text(`Player ${whichPlayerTurn}s Turn`)
-    if (whichPlayerTurn === CpuPlaying)
-        $('.turn').text(`Bot Turn`)
+    if (CpuPlaying){
+        if(whichPlayerTurn===CpuPlaying)
+            $('.turn').text(`Bot Turn`)
+        else
+            $('.turn').text('Player Turn');
+    }
     $(".time").text(`${this.timer}s`)
 }
 
@@ -257,6 +273,7 @@ function restartGame() {
     player1_score = 0
     player2_score = 0
     whichPlayerTurn = 1 + Math.floor(Math.random() * 2);
+    filled = 0;
     showTimeInDom();
     changeTimeBoxColorInDom()
     showScoreInDOM()
@@ -277,11 +294,10 @@ function startTimer() {
 
 createCiclesInDOM();
 setInterval(startTimer, 1000)
-setInterval(BotTurn, 3000)
 
 //Event Listeners 
 $('.menu').click(function () {
-    $('.menu-item').addClass('pop-up-animation')
+    $('.menu-item').addClass('pop-up-animation');
 })
 
 $('.pop-up-container').click(function () {
@@ -293,6 +309,7 @@ $('.p-v-p').click(function () {
     resetPlayerBox();
     $('.menu-item').removeClass('pop-up-animation')
     restartGame();
+    clearInterval(BotTurn)
 })
 
 $('.p-v-c').click(function () {
@@ -301,6 +318,7 @@ $('.p-v-c').click(function () {
     $(`.player-${CpuPlaying}-box h2`).text('Bot')
     $(`.player-${(CpuPlaying) % 2 + 1}-box h2`).text('Player')
     $('.menu-item').removeClass('pop-up-animation');
+    setInterval(BotTurn, 3000);
 })
 
 $('.restart').click(function () {
