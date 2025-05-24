@@ -7,7 +7,7 @@ var timer = 20;
 var player1_score = 0
 var player2_score = 0
 var filled = 0
-var maxDepth = 5; //Max depth for alpha beta pruning
+var maxDepth = 7; //Max depth for alpha beta pruning
 
 /*
 function createCiclesInDOM();  Intialize and show circles 
@@ -95,7 +95,7 @@ function selectedColumn(column_number) {
     showTimeInDom()
     if (whichPlayerTurn === CpuPlaying) {
             console.log('hi')
-            BotTurn() 
+            setTimeout(BotTurn, 500) 
     }
 }
 
@@ -405,7 +405,7 @@ function restartGame() {
     changeTimeBoxColorInDom()
     showScoreInDOM()
     if(whichPlayerTurn === CpuPlaying) {
-        BotTurn();
+        setTimeout(BotTurn, 500) 
     }
 }
 function resetPlayerBox() {
@@ -446,7 +446,7 @@ $('.p-v-c').click(function () {
     restartGame();
     CpuPlaying = Math.floor(Math.random() * 2) + 1;
     if(CpuPlaying === whichPlayerTurn)
-        BotTurn();
+        setTimeout(BotTurn, 500) 
     $(`.player-${CpuPlaying}-box h2`).text('Bot')
     $(`.player-${(CpuPlaying) % 2 + 1}-box h2`).text('Player')
     $('.menu-item').removeClass('pop-up-animation');
