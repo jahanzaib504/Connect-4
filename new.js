@@ -405,6 +405,9 @@ function restartGame() {
     showTimeInDom();
     changeTimeBoxColorInDom()
     showScoreInDOM()
+    if(whichPlayerTurn === CpuPlaying) {
+        BotTurn();
+    }
 }
 function resetPlayerBox() {
     $('.player-1-box h2').text('Player 1')
