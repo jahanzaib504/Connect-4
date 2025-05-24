@@ -400,7 +400,6 @@ function restartGame() {
     clearCircles();
     player1_score = 0
     player2_score = 0
-    whichPlayerTurn = 1 + Math.floor(Math.random() * 2);
     filled = 0;
     showTimeInDom();
     changeTimeBoxColorInDom()
