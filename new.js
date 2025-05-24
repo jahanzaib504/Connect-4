@@ -1,12 +1,13 @@
 
-grid = [] //This array is used to store circles
-arr = [];  //This array will be used for computation
-whichPlayerTurn = 1;
-CpuPlaying = 0; //Can have value 1 and 2 when CPU is playing
-timer = 20;
-player1_score = 0
-player2_score = 0
-filled = 0
+var grid = [] //This array is used to store circles
+var arr = [];  //This array will be used for computation
+var whichPlayerTurn = 1;
+var CpuPlaying = 0; //Can have value 1 and 2 when CPU is playing
+var timer = 20;
+var player1_score = 0
+var player2_score = 0
+var filled = 0
+var maxDepth = 5; //Max depth for alpha beta pruning
 
 /*
 function createCiclesInDOM();  Intialize and show circles 
@@ -53,7 +54,7 @@ function createCiclesInDOM() {
 }
 function selectedColumn(column_number) {
     //first check if column has one empty place
-    if (column_number < 0 || column_number > 7) return
+    if (column_number < 0 || column_number > 6) return
     let row_number = 0
     for (; row_number < 6; row_number++) {
         if (arr[row_number][column_number] != 0)
@@ -75,8 +76,8 @@ function selectedColumn(column_number) {
     if (full()) {
         if (player1_score === player2_score)
             alertPopup('Tied')
-        else if (CpuPlaying > 0) {
-            if (CpuPlaying === 1 && player1_score > player2_score)
+        else if (CpuPlaying) {
+            if (CpuPlaying === 1 && player1_score > player2_score || CpuPlaying === 2 && player2_score > player1_score)
                 alertPopup('Bot Won');
             else
                 alertPopup('Player Won')
@@ -92,6 +93,10 @@ function selectedColumn(column_number) {
     changeTimeBoxColorInDom()
     resetTime()
     showTimeInDom()
+    if (whichPlayerTurn === CpuPlaying) {
+            console.log('hi')
+            BotTurn() 
+    }
 }
 
 
@@ -197,19 +202,142 @@ function foundLine(row_number, column_number) {
     return 0; // No line of four found
 }
 
-function BotTurn() {
-    if (CpuPlaying !== whichPlayerTurn)
-        return;
-    setTimeout(() => { }, 3000)
-    let column_number = 0;
-    let empty_column = []
-    for (let i = 0; i < 7; i++) {
-        if (arr[0][i] === 0)
-            empty_column.push(i); //Checking empty columns
+
+function evaluateBoard() {
+    let score = 0;
+    //Check in every direction 
+    function check_line(player, row, column, dir_i, dir_j, count = 0) {
+        if(count == 4) return 1
+
+        if(row < 0 || row > 5 || column < 0 || column > 6) return 0;
+        if (arr[row][column] === player)
+            return check_line(player, row + dir_i, column + dir_j, dir_i, dir_j, count+1);
+        else
+            return 0;
     }
-    column_number = empty_column[Math.floor(Math.random() * (empty_column.length - 1))]
-    selectedColumn(column_number)
+    let player1_lines = 0, player2_lines = 0; //Keeping track of cells occupied by each player for immediate wins
+
+    const directions = [[1, 0], [0, 1], [1, 1], [1, -1]];
+    for(let i=0; i<arr.length; i++){
+        for(let j=0; j<arr[i].length; j++){
+            //Awarding a score of 10 for each circle closer to the center of board
+            current_player = arr[i][j];
+            if (current_player === 0) continue; // Skip empty cells
+
+            let current_sign = current_player === CpuPlaying ? 1 : -1;
+
+            score += (current_sign)*50*(3-Math.abs(3-j)) //50 score for each player
+            directions.forEach(([dir_i, dir_j])=>{
+                if(check_line(current_player, i,j,dir_i, dir_j)){
+                    score += (current_sign)*1000 //1000 score for each player
+                    if (current_player === CpuPlaying) {
+                        player1_lines++;
+                    } else {
+                        player2_lines++;
+                    }
+                }
+               
+            })
+        }
+    }
+    if(full()){
+        if (player1_lines > player2_lines) {
+            score = 10000; // Player 1 wins
+        } else if (player2_lines > player1_lines) {
+            score = 10000; // Player 2 wins
+        }else score = 0
+    }
+    return score
+    
 }
+
+function shuffler(array)
+{
+    for(let i=0; i<array.length; i++)
+    {
+        let j = Math.floor(Math.random() * array.length);
+        [array[i], array[j]] = [array[j], array[i]];
+    }
+    return array;
+}
+
+// Fixed alphaBetaPruning function
+function alphaBetaPruning(depth, isMaximizingPlayer, alpha=-Infinity, beta=+Infinity) {
+    // Base case: if we've reached the maximum depth or the board is full
+    if (depth === 0 || full()) {
+        return evaluateBoard();
+    }
+    
+    let best_score = isMaximizingPlayer ? -Infinity : +Infinity;
+    let best_move = {row: -1, column: -1};
+    const column_array = [0, 1, 2, 3, 4, 5, 6]
+    shuffler(column_array); // Shuffle columns for randomness
+    // Try each column
+    for (let idx = 0; idx < 7; idx++) {
+        // Find the row where the piece would land
+        let col = column_array[idx];
+        let row = 5;
+        while (row >= 0 && arr[row][col] !== 0) {
+            row--;
+        }
+        
+        // Skip if column is full
+        if (row < 0) continue;
+        
+        // Make the move
+        arr[row][col] = isMaximizingPlayer ? CpuPlaying : ((CpuPlaying % 2) + 1);
+        filled++;
+        
+        // Recursively evaluate this move
+        let score = alphaBetaPruning(depth - 1, !isMaximizingPlayer, alpha, beta);
+        
+        // Undo the move
+        arr[row][col] = 0;
+        filled--;
+        
+        // Update best score and move
+        if (isMaximizingPlayer) {
+            if (score > best_score) {
+                best_score = score;
+                if (depth === maxDepth) {
+                    best_move.row = row;
+                    best_move.column = col;
+                }
+            }
+            alpha = Math.max(alpha, best_score);
+        } else {
+            if (score < best_score) {
+                best_score = score;
+                if (depth === maxDepth) {
+                    best_move.row = row;
+                    best_move.column = col;
+                }
+            }
+            beta = Math.min(beta, best_score);
+        }
+        
+        // Alpha-beta pruning
+        if (beta <= alpha) break;
+    }
+    
+    // Return the best move for the top-level call, otherwise return the score
+    if (depth === maxDepth) {
+        return best_move;
+    }
+    return best_score;
+}
+function BotTurn() {
+    console.log('Bot Turn')
+    if (CpuPlaying !== whichPlayerTurn) return;
+    console.log('Bot Turn')
+
+    let best_move = alphaBetaPruning(maxDepth, true);
+    
+    if (!best_move) return;
+
+    selectedColumn(best_move.column)
+}
+
 function full() {
     return filled === 42;
 }
@@ -315,10 +443,11 @@ $('.p-v-p').click(function () {
 $('.p-v-c').click(function () {
     restartGame();
     CpuPlaying = Math.floor(Math.random() * 2) + 1;
+    if(CpuPlaying === whichPlayerTurn)
+        BotTurn();
     $(`.player-${CpuPlaying}-box h2`).text('Bot')
     $(`.player-${(CpuPlaying) % 2 + 1}-box h2`).text('Player')
     $('.menu-item').removeClass('pop-up-animation');
-    setInterval(BotTurn, 3000);
 })
 
 $('.restart').click(function () {
